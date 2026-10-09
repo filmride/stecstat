@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>คัมภีร์PK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<style>
+html,body{margin:0}
+/* Layout: single-column analyst's report, summary first, then role comparison, heroes, pick order, match log. */
+:root{
+  --bg:#E9EEF2; --surface:#F6F8FA; --ink:#121C26; --muted:#56687A; --line:#CBD5DE;
+  --accent:#A87A06; --accent-soft:#F1E3B8;
+  --win:#12806A; --win-soft:#CDEBE3; --loss:#C23B2B; --loss-soft:#F4D3CE;
+  --r0:#3F73D6; --r1:#D2742C; --r2:#9055D6; --r3:#2F9A62; --r4:#1E9DB3;
+  --f-display:'Bai Jamjuree','IBM Plex Sans Thai',system-ui,sans-serif;
+  --f-body:'IBM Plex Sans Thai',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B1117; --surface:#121B24; --ink:#E5ECF2; --muted:#8DA1B3; --line:#243441;
+  --accent:#E8B93C; --accent-soft:#3A3012;
+  --win:#34C3A2; --win-soft:#123B33; --loss:#F0705E; --loss-soft:#4A1F1A;
+  --r0:#6A9BF5; --r1:#F09A55; --r2:#B58AF2; --r3:#52C98A; --r4:#4CC3D8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1117; --surface:#121B24; --ink:#E5ECF2; --muted:#8DA1B3; --line:#243441;
+  --accent:#E8B93C; --accent-soft:#3A3012;
+  --win:#34C3A2; --win-soft:#123B33; --loss:#F0705E; --loss-soft:#4A1F1A;
+  --r0:#6A9BF5; --r1:#F09A55; --r2:#B58AF2; --r3:#52C98A; --r4:#4CC3D8; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65;padding-inline:16px;padding-block:28px 56px}
+*{box-sizing:border-box}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;line-height:1.25}
+h1{font-size:clamp(30px,6vw,46px);font-weight:700;letter-spacing:.01em}
+h2{font-size:22px;font-weight:700}
+h3{font-size:16px;font-weight:600}
+.kicker{font-family:var(--f-display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.sub{color:var(--muted);margin:6px 0 0;max-width:62ch}
+.num{font-family:var(--f-display);font-variant-numeric:tabular-nums}
+section{display:flex;flex-direction:column;gap:18px;min-width:0}
+.head{display:flex;flex-direction:column;gap:4px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px;min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.kpi b{font-family:var(--f-display);font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi span{color:var(--muted);font-size:13px}
+.kpi.win b{color:var(--win)}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+.note{border-top:2px solid var(--ink);padding-top:10px;display:flex;flex-direction:column;gap:4px}
+.note h3{font-size:15px}
+.note p{margin:0;color:var(--muted);font-size:14px}
+.note p b{color:var(--ink);font-weight:600}
+.strip{display:flex;flex-wrap:wrap;gap:18px 22px}
+.day{display:flex;flex-direction:column;gap:6px}
+.day small{color:var(--muted);font-size:12px;white-space:nowrap}
+.cells{display:flex;gap:4px}
+.cell{width:30px;height:30px;border-radius:3px;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:13px}
+.cell.w{background:var(--win-soft);color:var(--win);border:1px solid var(--win)}
+.cell.l{background:var(--loss-soft);color:var(--loss);border:1px solid var(--loss)}
+svg{display:block;width:100%;height:auto}
+.axis{stroke:var(--line);stroke-width:1}
+.grid{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
+.t{fill:var(--muted);font-family:var(--f-body);font-size:11px}
+.tl{fill:var(--ink);font-family:var(--f-display);font-size:13px;font-weight:700}
+.line{fill:none;stroke:var(--ink);stroke-width:2}
+.tablewrap{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:500;color:var(--muted);font-size:12px;letter-spacing:.02em}
+td.best{color:var(--accent);font-weight:600}
+td.dim,tr.dim td{color:var(--muted)}
+.tag{display:inline-block;padding:1px 8px;border-radius:3px;font-size:12px;font-weight:600}
+.tag.w{background:var(--win-soft);color:var(--win)}
+.tag.l{background:var(--loss-soft);color:var(--loss)}
+.dotr{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:13px;padding:6px 12px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:4px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar{display:grid;grid-template-columns:64px 1fr 76px;align-items:center;gap:10px}
+.bar .track{height:22px;background:var(--bg);border-radius:3px;overflow:hidden}
+.bar .fill{height:100%;border-radius:3px;transition:width .35s}
+.bar .v{font-family:var(--f-display);font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.dumb{display:flex;flex-direction:column;gap:14px}
+.drow{display:grid;grid-template-columns:64px 1fr;align-items:center;gap:10px}
+.dtrack{position:relative;height:30px}
+.dtrack .base{position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line)}
+.dtrack .span{position:absolute;top:50%;height:3px;margin-top:-1px;background:var(--muted);opacity:.5}
+.dtrack .pt{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%}
+.dtrack .pl{position:absolute;top:-4px;font-size:11px;font-family:var(--f-display);font-weight:700;transform:translateX(-50%)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.heat td,.heat th{text-align:center}
+.heat td.c{border:1px solid var(--bg);min-width:70px;line-height:1.3}
+.heat td.c b{font-family:var(--f-display);font-size:17px;display:block}
+.heat td.c span{font-size:11px;color:var(--muted)}
+.hd{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;padding:1px 7px;border:1px solid var(--line);border-radius:3px;color:var(--muted)}
+.chip.mvp{border-color:var(--accent);color:var(--accent);font-weight:600}
+.livebar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:10px}
+.btn{font:inherit;font-size:14px;font-weight:600;padding:8px 16px;border-radius:4px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
+.btn:disabled{opacity:.55;cursor:wait}
+.livemsg{color:var(--muted);font-size:13px}
+footer{color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:16px}
+@media (max-width:520px){.bar{grid-template-columns:54px 1fr 66px}.cell{width:26px;height:26px}.panel{padding:14px}}
+@media (prefers-reduced-motion:reduce){.bar .fill{transition:none}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="head">
+    <div class="kicker">PK Esports · สถิติทีมซ้อม</div>
+    <h1>คัมภีร์PK</h1>
+    <p class="sub" id="range"></p>
+    <div class="livebar"><button id="refresh" class="btn" hidden>ดึงข้อมูลล่าสุดจากชีต</button><span id="live" class="livemsg" role="status">ข้อมูลสแนปช็อต</span></div>
+  </header>
+
+  <section id="s-kpi" aria-label="สรุปภาพรวม">
+    <div class="kpis" id="kpis"></div>
+    <div class="notes" id="notes"></div>
+  </section>
+
+  <section>
+    <div class="head"><h2>ผลการแข่งทีละเกม</h2><p class="sub">เรียงตามวันที่ ช = ชนะ, พ = แพ้ เส้นกราฟคือวินเรตสะสมหลังจบแต่ละเกม</p></div>
+    <div class="panel"><div class="strip" id="strip"></div></div>
+    <div class="panel"><svg id="trend" viewBox="0 0 680 230" role="img" aria-label="กราฟวินเรตสะสม"></svg></div>
+    <div class="panel tablewrap"><table id="daytable"></table></div>
+  </section>
+
+  <section>
+    <div class="head"><h2>เปรียบเทียบตำแหน่ง</h2><p class="sub">ค่าเฉลี่ยจากทุกเกมที่มีสถิติ เลือกตัวชี้วัดเพื่อเรียงลำดับตำแหน่ง</p></div>
+    <div class="panel">
+      <div class="seg" id="metricseg" role="group" aria-label="เลือกตัวชี้วัด"></div>
+      <div class="bars" id="bars" style="margin-top:16px"></div>
+    </div>
+    <div class="two">
+      <div class="panel">
+        <h3>คะแนนเฉลี่ยเมื่อชนะ เทียบกับเมื่อแพ้</h3>
+        <p class="sub" style="margin-bottom:14px">ยิ่งช่องว่างกว้าง ตำแหน่งนั้นยิ่งตกตามผลเกม</p>
+        <div class="dumb" id="dumb"></div>
+        <div class="legend" style="margin-top:12px"><span><i style="background:var(--loss)"></i>เมื่อแพ้</span><span><i style="background:var(--win)"></i>เมื่อชนะ</span></div>
+      </div>
+      <div class="panel">
+        <h3>MVP แยกตามตำแหน่ง</h3>
+        <p class="sub" style="margin-bottom:14px">ชนะ = MVP ฝั่งชนะ, แพ้ = MVP ฝั่งแพ้</p>
+        <div class="tablewrap"><table id="mvptable"></table></div>
+      </div>
+    </div>
+    <div class="panel tablewrap"><table id="roletable"></table></div>
+  </section>
+
+  <section>
+    <div class="head"><h2>ตัวละครที่ใช้</h2><p class="sub">จัดตามตำแหน่ง ตัวที่ใช้ต่ำกว่า 3 เกมแสดงเป็นสีจาง เพราะตัวอย่างยังน้อย</p></div>
+    <div class="panel">
+      <div class="seg" id="heroseg" role="group" aria-label="เลือกตำแหน่ง"></div>
+      <div class="tablewrap" style="margin-top:12px"><table id="herotable"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><h2>ลำดับการเลือก</h2><p class="sub">แต่ละช่องคือจำนวนเกมที่ตำแหน่งนั้นถูกเลือกในลำดับที่ 1 ถึง 5 และวินเรตของช่องนั้น (19 เกมที่บันทึกลำดับไว้)</p></div>
+    <div class="panel tablewrap"><table class="heat" id="heat"></table></div>
+  </section>
+
+  <section>
+    <div class="head"><h2>บันทึกทุกเกม</h2></div>
+    <div class="seg" id="logseg" role="group" aria-label="กรองผล"></div>
+    <div class="panel tablewrap"><table id="log"></table></div>
+  </section>
+
+  <footer>
+    <span id="src"></span>
+    <span>เกมที่ยังไม่มีผลแพ้ชนะไม่ถูกนับ เกมที่ไม่มีสถิติครบจะไม่ถูกนับในค่าเฉลี่ยของช่องนั้น ตัวอย่างยังน้อย ใช้เป็นแนวโน้ม ไม่ใช่ข้อสรุปตายตัว</span>
+  </footer>
+</div>
+
+<script>
+const SNAP = [{"date": "27/09/2026", "opp": "4 อิม 1 ซู", "game": 1, "win": false, "picks": [1, 3, 2, 4, 5], "heroes": ["Toro", "Eland'orr", "Rouie", "Zephys", "Airi"], "stats": [{"dmg": 84324, "taken": 135073, "part": 11, "score": 7.2, "mvp": false}, {"dmg": 135924, "taken": 83117, "part": 8, "score": 7.8, "mvp": false}, {"dmg": 163799, "taken": 40859, "part": 10, "score": 9.0, "mvp": false}, {"dmg": 74325, "taken": 89384, "part": 10, "score": 6.5, "mvp": false}, {"dmg": 102710, "taken": 107338, "part": 8, "score": 10.8, "mvp": true}]}, {"date": "27/09/2026", "opp": "4 อิม 1 ซู", "game": 2, "win": true, "picks": [5, 2, 1, 3, 4], "heroes": ["Aya", "Hayate", "Alice", "Billow", "Omen"], "stats": [{"dmg": 36635, "taken": 90292, "part": 16, "score": 8.4, "mvp": false}, {"dmg": 73818, "taken": 35386, "part": 7, "score": 7.7, "mvp": false}, {"dmg": 109055, "taken": 4886, "part": 14, "score": 8.9, "mvp": false}, {"dmg": 95904, "taken": 56674, "part": 14, "score": 9.6, "mvp": true}, {"dmg": 42342, "taken": 54802, "part": 7, "score": 7.1, "mvp": false}]}, {"date": "27/09/2026", "opp": "4 อิม 1 ซู", "game": 3, "win": true, "picks": [null, null, null, null, null], "heroes": ["Wiro", "Capheny", "Zata", "Astrid", "Florentino"], "stats": [{"dmg": 111741, "taken": 224777, "part": 23, "score": 10.8, "mvp": true}, {"dmg": 278426, "taken": 82925, "part": 15, "score": 10.2, "mvp": false}, {"dmg": 148901, "taken": 73180, "part": 19, "score": 8.8, "mvp": false}, {"dmg": 173881, "taken": 143194, "part": 22, "score": 8.5, "mvp": false}, {"dmg": 168633, "taken": 128388, "part": 10, "score": 7.4, "mvp": false}]}, {"date": "28/09/2026", "opp": "3 กลอ 2 อิม [ทีมหญิง]", "game": 1, "win": true, "picks": [3, 2, 1, 5, 4], "heroes": ["TeeMee", "Capheny", "Rouie", "Edras", "Qi"], "stats": [{"dmg": 20615, "taken": 40623, "part": 12, "score": 10.8, "mvp": false}, {"dmg": 35442, "taken": 18845, "part": 6, "score": 8.5, "mvp": false}, {"dmg": 34641, "taken": 24819, "part": 12, "score": 9.9, "mvp": false}, {"dmg": 94307, "taken": 27845, "part": 13, "score": 12.8, "mvp": true}, {"dmg": 35020, "taken": 32555, "part": 9, "score": 9.1, "mvp": false}]}, {"date": "28/09/2026", "opp": "3 กลอ 2 อิม [ทีมหญิง]", "game": 2, "win": true, "picks": [4, 2, 1, 3, 5], "heroes": ["Toro", "Violet", "Annette", "Nakroth", "Airi"], "stats": [{"dmg": 35776, "taken": 72936, "part": 7, "score": 10.0, "mvp": false}, {"dmg": 55149, "taken": 35192, "part": 4, "score": 7.7, "mvp": false}, {"dmg": 56212, "taken": 27831, "part": 4, "score": 7.4, "mvp": false}, {"dmg": 67311, "taken": 43231, "part": 10, "score": 10.3, "mvp": true}, {"dmg": 34023, "taken": 40916, "part": 5, "score": 7.5, "mvp": false}]}, {"date": "28/09/2026", "opp": "3 กลอ 2 อิม [ทีมหญิง]", "game": 3, "win": true, "picks": [1, 4, 3, 2, 5], "heroes": ["Y'bneth", "Hayate", "Lorion", "Billow", "Ryoma"], "stats": [{"dmg": 25748, "taken": 64400, "part": 10, "score": 9.2, "mvp": false}, {"dmg": 68230, "taken": 32693, "part": 8, "score": 9.5, "mvp": false}, {"dmg": 63011, "taken": 54610, "part": 7, "score": 8.0, "mvp": false}, {"dmg": 71126, "taken": 53012, "part": 10, "score": 12.0, "mvp": true}, {"dmg": 48082, "taken": 37277, "part": 4, "score": 7.6, "mvp": false}]}, {"date": "28/09/2026", "opp": "3 กลอ 2 อิม [ทีมหญิง]", "game": 4, "win": true, "picks": [1, 2, 4, 5, 3], "heroes": ["Enzo", "Eland'orr", "Zata", "Taara", "Florentino"], "stats": [{"dmg": 45815, "taken": 102699, "part": 15, "score": 7.3, "mvp": false}, {"dmg": 92164, "taken": 59545, "part": 8, "score": 7.5, "mvp": false}, {"dmg": 144105, "taken": 72554, "part": 14, "score": 10.5, "mvp": true}, {"dmg": 108640, "taken": 211739, "part": 8, "score": 9.0, "mvp": false}, {"dmg": 90860, "taken": 107867, "part": 10, "score": 8.9, "mvp": false}]}, {"date": "02/10/2026", "opp": "ซู 5 [ทีมเบต]", "game": 1, "win": true, "picks": [3, 2, 1, 4, 5], "heroes": ["TeeMee", "Capheny", "Zata", "Edras", "Airi"], "stats": [{"dmg": 17188, "taken": 17892, "part": 8, "score": 8.0, "mvp": false}, {"dmg": 37454, "taken": 8528, "part": 8, "score": 9.3, "mvp": false}, {"dmg": 36346, "taken": 10363, "part": 9, "score": 9.8, "mvp": false}, {"dmg": 41643, "taken": 15185, "part": 10, "score": 12.1, "mvp": true}, {"dmg": 21689, "taken": 24616, "part": 7, "score": 9.2, "mvp": false}]}, {"date": "02/10/2026", "opp": "ซู 5 [ทีมเบต]", "game": 2, "win": true, "picks": [2, 1, 4, 3, 5], "heroes": ["Toro", "Flowborn", "Heino", "Nakroth", "Omen"], "stats": [{"dmg": 48381, "taken": 101125, "part": 3, "score": 5.6, "mvp": false}, {"dmg": 111066, "taken": 53736, "part": 3, "score": 7.6, "mvp": false}, {"dmg": 119885, "taken": 67393, "part": 4, "score": 7.0, "mvp": false}, {"dmg": 88764, "taken": 57451, "part": 5, "score": 7.4, "mvp": false}, {"dmg": 60225, "taken": 47153, "part": 6, "score": 9.5, "mvp": true}]}, {"date": "03/10/2026", "opp": "อิม 5", "game": 1, "win": true, "picks": [1, 2, 4, 5, 3], "heroes": ["Toro", "Violet", "D'Arcy", "Nakroth", "Ryoma"], "stats": [{"dmg": 37484, "taken": 99888, "part": 12, "score": 11.0, "mvp": true}, {"dmg": 69702, "taken": 32002, "part": 8, "score": 9.3, "mvp": false}, {"dmg": 96409, "taken": 40772, "part": 12, "score": 10.4, "mvp": false}, {"dmg": 76022, "taken": 67984, "part": 9, "score": 9.3, "mvp": false}, {"dmg": 80569, "taken": 63422, "part": 7, "score": 10.8, "mvp": false}]}, {"date": "03/10/2026", "opp": "อิม 5", "game": 2, "win": true, "picks": [2, 3, 4, 1, 5], "heroes": ["Dolia", "Flowborn", "Preyta", "Astrid", "Charlotte"], "stats": [{"dmg": 40760, "taken": 85747, "part": 8, "score": 6.4, "mvp": false}, {"dmg": 91450, "taken": 21095, "part": 6, "score": 6.9, "mvp": false}, {"dmg": 191455, "taken": 45805, "part": 5, "score": 7.6, "mvp": false}, {"dmg": 81397, "taken": 91617, "part": 5, "score": 5.4, "mvp": false}, {"dmg": 116441, "taken": 121537, "part": 10, "score": 11.2, "mvp": true}]}, {"date": "04/10/2026", "opp": "อิม 4 ซู 1", "game": 1, "win": true, "picks": [4, 2, 1, 5, 3], "heroes": ["Y'bneth", "Flowborn", "Lorion", "Nakroth", "Qi"], "stats": [{"dmg": 53147, "taken": 152004, "part": 13, "score": 10.7, "mvp": true}, {"dmg": 154135, "taken": 49736, "part": 10, "score": 8.1, "mvp": false}, {"dmg": 139929, "taken": 116424, "part": 14, "score": 8.7, "mvp": false}, {"dmg": 131394, "taken": 86413, "part": 13, "score": 10.2, "mvp": false}, {"dmg": 113589, "taken": 110308, "part": 13, "score": 9.0, "mvp": false}]}, {"date": "04/10/2026", "opp": "อิม 4 ซู 1", "game": 2, "win": true, "picks": [3, 1, 2, 5, 4], "heroes": ["Maloch", "Eland'orr", "Rouie", "Keera", "Taara"], "stats": [{"dmg": 104718, "taken": 120065, "part": 18, "score": 10.8, "mvp": false}, {"dmg": 109437, "taken": 74197, "part": 9, "score": 7.6, "mvp": false}, {"dmg": 52212, "taken": 73865, "part": 16, "score": 8.7, "mvp": false}, {"dmg": 95596, "taken": 83340, "part": 11, "score": 7.7, "mvp": false}, {"dmg": 143332, "taken": 219942, "part": 13, "score": 11.1, "mvp": true}]}, {"date": "04/10/2026", "opp": "อิม 4 ซู 1", "game": 3, "win": false, "picks": [3, 4, 1, 2, 5], "heroes": ["Dyadia", "Stuart", "Alice", "Billow", "Maloch"], "stats": [{"dmg": 60188, "taken": 116863, "part": 14, "score": 7.2, "mvp": false}, {"dmg": 89130, "taken": 50607, "part": 11, "score": 8.4, "mvp": false}, {"dmg": 78047, "taken": 70337, "part": 13, "score": 8.0, "mvp": false}, {"dmg": 113032, "taken": 131745, "part": 14, "score": 8.8, "mvp": true}, {"dmg": 38696, "taken": 103358, "part": 13, "score": 8.1, "mvp": false}]}, {"date": "05/10/2026", "opp": "อิม2 ซู3", "game": 1, "win": true, "picks": [5, 4, 3, 1, 2], "heroes": ["Toro", "Marja", "Lorion", "Tamyn", "Skud"], "stats": [{"dmg": 19474, "taken": 26311, "part": 8, "score": 9.7, "mvp": false}, {"dmg": 24697, "taken": 20996, "part": 5, "score": 8.5, "mvp": false}, {"dmg": 34723, "taken": 28126, "part": 7, "score": 9.5, "mvp": false}, {"dmg": 33455, "taken": 22545, "part": 6, "score": 10.9, "mvp": false}, {"dmg": 37084, "taken": 33871, "part": 5, "score": 12.1, "mvp": true}]}, {"date": "05/10/2026", "opp": "อิม2 ซู3", "game": 2, "win": true, "picks": [2, 3, 4, 1, 5], "heroes": ["Cresht", "Valhein", "Goverra", "Billow", "Marja"], "stats": [{"dmg": 10368, "taken": 35169, "part": 2, "score": 5.2, "mvp": false}, {"dmg": 17484, "taken": 10759, "part": 2, "score": 6.3, "mvp": false}, {"dmg": 49639, "taken": 16980, "part": 2, "score": 6.3, "mvp": false}, {"dmg": 38015, "taken": 29336, "part": 5, "score": 7.7, "mvp": true}, {"dmg": 29710, "taken": 56262, "part": 4, "score": 6.3, "mvp": false}]}, {"date": "05/10/2026", "opp": "อิม2 ซู3", "game": 3, "win": false, "picks": [3, 2, 1, 5, 4], "heroes": ["TeeMee", "Violet", "Rouie", "Taara", "Maloch"], "stats": [{"dmg": 27494, "taken": 61230, "part": 4, "score": 5.5, "mvp": false}, {"dmg": 50526, "taken": 31530, "part": 3, "score": 6.7, "mvp": false}, {"dmg": 70141, "taken": 50312, "part": 4, "score": 7.0, "mvp": true}, {"dmg": 25051, "taken": 76646, "part": 2, "score": 5.0, "mvp": false}, {"dmg": 36040, "taken": 71239, "part": 2, "score": 4.7, "mvp": false}]}, {"date": "06/10/2026", "opp": "กลอ 1 อิม 3 ซู 1 [ภูเก็ต]", "game": 1, "win": false, "picks": [2, 3, 1, 4, 5], "heroes": ["Toro", "Wisp", "Annette", "Edras", "Qi"], "stats": [{"dmg": 47889, "taken": 125434, "part": 7, "score": 7.2, "mvp": true}, {"dmg": 85262, "taken": 36776, "part": 5, "score": 5.8, "mvp": false}, {"dmg": 85413, "taken": 54848, "part": 5, "score": 3.9, "mvp": false}, {"dmg": 123501, "taken": 66160, "part": 8, "score": 6.7, "mvp": false}, {"dmg": 65733, "taken": 80234, "part": 5, "score": 5.6, "mvp": false}]}, {"date": "06/10/2026", "opp": "กลอ 1 อิม 3 ซู 1 [ภูเก็ต]", "game": 2, "win": false, "picks": [3, 2, 1, 5, 4], "heroes": ["TeeMee", "Capheny", "Rouie", "Nakroth", "Airi"], "stats": [{"dmg": 15420, "taken": 57219, "part": 1, "score": 4.6, "mvp": false}, {"dmg": 63385, "taken": 42172, "part": 0, "score": 3.9, "mvp": false}, {"dmg": 39345, "taken": 44790, "part": 1, "score": 4.3, "mvp": false}, {"dmg": 35311, "taken": 48612, "part": 3, "score": 6.9, "mvp": false}, {"dmg": 50801, "taken": 57745, "part": 1, "score": 7.4, "mvp": true}]}, {"date": "06/10/2026", "opp": "กลอ 1 อิม 3 ซู 1 [ภูเก็ต]", "game": 3, "win": false, "picks": [5, 3, 1, 2, 4], "heroes": ["Helen", "Valhein", "Alice", "Tamyn", "Taara"], "stats": [{"dmg": null, "taken": null, "part": null, "score": null, "mvp": false}, {"dmg": null, "taken": null, "part": null, "score": null, "mvp": false}, {"dmg": null, "taken": null, "part": null, "score": null, "mvp": false}, {"dmg": null, "taken": null, "part": null, "score": 7.6, "mvp": true}, {"dmg": null, "taken": null, "part": null, "score": null, "mvp": false}]}];
+const ROLES = [{k:'โรม',c:'var(--r0)'},{k:'แครี่',c:'var(--r1)'},{k:'เมจ',c:'var(--r2)'},{k:'ป่า',c:'var(--r3)'},{k:'ออฟ',c:'var(--r4)'}];
+const MON = {'09':'ก.ย.','10':'ต.ค.'};
+const $ = id => document.getElementById(id);
+const avg = a => { a = a.filter(x => x != null); return a.length ? a.reduce((s,x)=>s+x,0)/a.length : null; };
+const fmt = (v,d=1) => v == null ? '–' : v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const int = v => v == null ? '–' : Math.round(v).toLocaleString('en-US');
+const dshort = d => { const p = d.split('/'); return (+p[0]) + ' ' + MON[p[1]]; };
+const pct = (w,n) => n ? Math.round(w/n*100) + '%' : '–';
+
+function render(G){
+
+const wins = G.filter(g=>g.win).length, n = G.length;
+const dates = [...new Set(G.map(g=>g.date))];
+let streak = 0, best = 0; G.forEach(g => { streak = g.win ? streak+1 : 0; best = Math.max(best,streak); });
+
+// per-role aggregates
+const R = ROLES.map((r,i) => {
+  const s = g => g.stats[i];
+  const W = G.filter(g=>g.win), L = G.filter(g=>!g.win);
+  return {
+    ...r, i,
+    score: avg(G.map(g=>s(g).score)), dmg: avg(G.map(g=>s(g).dmg)), taken: avg(G.map(g=>s(g).taken)), part: avg(G.map(g=>s(g).part)),
+    sw: avg(W.map(g=>s(g).score)), sl: avg(L.map(g=>s(g).score)),
+    mvp: G.filter(g=>s(g).mvp).length, mvpW: W.filter(g=>s(g).mvp).length, mvpL: L.filter(g=>s(g).mvp).length
+  };
+});
+const mvpTotal = R.reduce((a,r)=>a+r.mvp,0);
+
+$('range').textContent = 'ซ้อม ' + dshort(dates[0]) + ' ถึง ' + dshort(dates[dates.length-1]) + ' 2026 รวม ' + n + ' เกม จากทีมที่เจอ ' + new Set(G.map(g=>g.opp)).size + ' แบบ';
+
+// KPIs
+$('kpis').innerHTML = [
+  ['เกมที่เล่น', n, ''],
+  ['ชนะ – แพ้', wins + ' – ' + (n-wins), 'win'],
+  ['วินเรต', Math.round(wins/n*100) + '%', 'win'],
+  ['ชนะรวดสูงสุด', best + ' เกม', ''],
+  ['MVP ที่ได้ฝั่งแพ้', G.filter(g=>!g.win && g.stats.some(s=>s.mvp)).length + ' เกม', '']
+].map(k => `<div class="kpi ${k[2]}"><span>${k[0]}</span><b>${k[1]}</b></div>`).join('');
+
+// Automatic notes, computed from whatever data is loaded
+const byMvp = [...R].sort((a,b)=>b.mvp-a.mvp);
+const noMvp = R.filter(r=>r.mvp===0).map(r=>r.k);
+const drops = R.filter(r=>r.sw!=null&&r.sl!=null).map(r=>({r,d:r.sw-r.sl})).sort((a,b)=>b.d-a.d);
+const lowRole = [...R].filter(r=>r.score!=null).sort((a,b)=>a.score-b.score)[0];
+const dayStats = dates.map(d=>{const gs=G.filter(g=>g.date===d);return {d,opp:gs[0].opp,w:gs.filter(g=>g.win).length,n:gs.length};});
+const worst = [...dayStats].sort((a,b)=>a.w/a.n-b.w/b.n||b.n-a.n)[0];
+const hm = {}; G.forEach(g=>g.heroes.forEach((h,i)=>{ if(!h) return; const k=i+'|'+h; const o=hm[k]||(hm[k]={h,role:ROLES[i].k,n:0,w:0}); o.n++; o.w+=g.win; }));
+const often = Object.values(hm).filter(o=>o.n>=4).sort((a,b)=>a.w/a.n-b.w/b.n||b.n-a.n)[0];
+const notes = [
+  [`ชนะ ${wins} จาก ${n} เกม`, `วินเรต <b>${Math.round(wins/n*100)}%</b> ชนะรวดสูงสุด <b>${best} เกม</b>`],
+  worst && worst.w<worst.n ? [`${dshort(worst.d)} วินเรตต่ำสุด`, `ชนะ <b>${worst.w}</b> แพ้ <b>${worst.n-worst.w}</b> เจอทีม <b>${worst.opp}</b> ควรย้อนดูช่วงต้นเกมและการรวมทีมของวันนี้`] : ['ยังไม่มีวันที่แพ้', 'ทุกวันที่บันทึกไว้ทีมชนะครบทุกเกม'],
+  [`${byMvp[0].k} ได้ MVP มากสุด`, `<b>${byMvp[0].mvp} ครั้ง</b> รองลงมา ${byMvp[1].k} ${byMvp[1].mvp} ครั้ง` + (noMvp.length ? ` ตำแหน่งที่ยังไม่ได้ MVP: <b>${noMvp.join(', ')}</b>` : '')],
+  drops.length ? [`${drops[0].r.k} ตกมากสุดเมื่อแพ้`, `คะแนนเฉลี่ยจาก <b>${fmt(drops[0].r.sw,2)}</b> ตอนชนะ เหลือ <b>${fmt(drops[0].r.sl,2)}</b> ตอนแพ้ (ลด ${fmt(drops[0].d,2)}) ตกมากที่สุดเมื่อเทียบกับตำแหน่งอื่น`] : ['คะแนนตอนชนะเทียบตอนแพ้','ยังมีข้อมูลไม่พอ'],
+  lowRole ? [`${lowRole.k} คะแนนเฉลี่ยต่ำสุด`, `เฉลี่ย <b>${fmt(lowRole.score,2)}</b> ส่วนร่วมเฉลี่ย <b>${fmt(lowRole.part)}</b> ครั้งต่อเกม ลองดูจังหวะเข้าไฟต์และการจัดสรรทรัพยากร`] : ['คะแนนตามตำแหน่ง','ยังมีข้อมูลไม่พอ'],
+  often ? [`${often.h} (${often.role}) ใช้บ่อยแต่ชนะน้อย`, `ใช้ <b>${often.n} เกม</b> ชนะ <b>${pct(often.w,often.n)}</b> ตัวอย่างยังน้อย แต่คุ้มทดสอบสลับตัวในซ้อมถัดไป`] : ['ตัวละครที่ใช้บ่อย','ยังไม่มีตัวละครที่ใช้ถึง 4 เกม']
+];
+$('notes').innerHTML = notes.map(x => `<div class="note"><h3>${x[0]}</h3><p>${x[1]}</p></div>`).join('');
+$('src').textContent = 'ข้อมูลจากชีต "สถิติ" ของไฟล์คัมภีร์PK ทั้งหมด ' + n + ' เกม ระหว่าง ' + dates[0] + ' ถึง ' + dates[dates.length-1];
+
+// Results strip
+$('strip').innerHTML = dates.map(d => {
+  const gs = G.filter(g=>g.date===d);
+  return `<div class="day"><div class="cells">${gs.map(g=>`<div class="cell ${g.win?'w':'l'}" title="${dshort(d)} เกม ${g.game} · ${g.win?'ชนะ':'แพ้'}">${g.win?'ช':'พ'}</div>`).join('')}</div><small>${dshort(d)} · ${gs.filter(g=>g.win).length}-${gs.filter(g=>!g.win).length}</small></div>`;
+}).join('');
+
+// Trend chart
+(function(){
+  const W=680,H=230,L=40,Rr=20,T=18,B=34, pw=W-L-Rr, ph=H-T-B;
+  const x = i => L + pw*(i/(n-1)), y = v => T + ph*(1 - v/100);
+  let w = 0; const pts = G.map((g,i)=>{ w += g.win; return {i, v: w/(i+1)*100}; });
+  let s = [0,50,100].map(v=>`<line class="${v===50?'grid':'axis'}" x1="${L}" x2="${W-Rr}" y1="${y(v)}" y2="${y(v)}"/><text class="t" x="${L-8}" y="${y(v)+4}" text-anchor="end">${v}%</text>`).join('');
+  let idx = 0;
+  dates.forEach(d => {
+    const c = G.filter(g=>g.date===d).length;
+    s += `<line class="grid" x1="${x(idx)-(idx?pw/(n-1)/2:0)}" x2="${x(idx)-(idx?pw/(n-1)/2:0)}" y1="${T}" y2="${T+ph}" ${idx? '':'style="display:none"'}/><text class="t" x="${x(idx+(c-1)/2)}" y="${H-10}" text-anchor="middle">${dshort(d)}</text>`;
+    idx += c;
+  });
+  s += `<path class="line" d="${pts.map((p,k)=>(k?'L':'M')+x(p.i).toFixed(1)+' '+y(p.v).toFixed(1)).join(' ')}"/>`;
+  s += G.map((g,i)=>`<circle cx="${x(i)}" cy="${y(pts[i].v)}" r="3.2" fill="${g.win?'var(--win)':'var(--loss)'}"><title>เกม ${i+1}: วินเรตสะสม ${Math.round(pts[i].v)}%</title></circle>`).join('');
+  const e = pts[pts.length-1];
+  s += `<text class="tl" x="${x(e.i)}" y="${y(e.v)-10}" text-anchor="end">${Math.round(e.v)}%</text>`;
+  $('trend').innerHTML = s;
+})();
+
+// By-day table
+$('daytable').innerHTML = '<thead><tr><th>วันที่</th><th style="text-align:left">ทีมที่เจอ</th><th>ชนะ</th><th>แพ้</th><th>วินเรต</th></tr></thead><tbody>' +
+  dates.map(d => { const gs=G.filter(g=>g.date===d), w=gs.filter(g=>g.win).length;
+    return `<tr><td>${dshort(d)}</td><td style="text-align:left">${gs[0].opp}</td><td>${w}</td><td>${gs.length-w}</td><td class="num">${pct(w,gs.length)}</td></tr>`; }).join('') + '</tbody>';
+
+// Role comparison
+const METRICS = [
+  {k:'score',label:'คะแนนเฉลี่ย',f:v=>fmt(v,2)},
+  {k:'mvp',label:'MVP',f:v=>v+' ครั้ง'},
+  {k:'dmg',label:'ดาเมจ',f:v=>int(v)},
+  {k:'taken',label:'รับดาเมจ',f:v=>int(v)},
+  {k:'part',label:'ส่วนร่วม',f:v=>fmt(v)+' ครั้ง'}
+];
+let metric = METRICS[0];
+function drawBars(){
+  $('metricseg').innerHTML = METRICS.map(m=>`<button data-k="${m.k}" aria-pressed="${m===metric}">${m.label}</button>`).join('');
+  const rows = [...R].sort((a,b)=>b[metric.k]-a[metric.k]), mx = Math.max(...rows.map(r=>r[metric.k]));
+  $('bars').innerHTML = rows.map(r=>`<div class="bar"><span><i class="dotr" style="background:${r.c}"></i>${r.k}</span><div class="track"><div class="fill" style="width:${mx?r[metric.k]/mx*100:0}%;background:${r.c}"></div></div><span class="v">${metric.f(r[metric.k])}</span></div>`).join('');
+  document.querySelectorAll('#metricseg button').forEach(b=>b.onclick=()=>{metric=METRICS.find(m=>m.k===b.dataset.k);drawBars();});
+}
+drawBars();
+
+$('dumb').innerHTML = R.map(r=>{
+  const p = v => ((v-5)/5*100).toFixed(1);
+  const a = p(r.sl), b = p(r.sw);
+  return `<div class="drow"><span><i class="dotr" style="background:${r.c}"></i>${r.k}</span><div class="dtrack"><div class="base"></div><div class="span" style="left:${a}%;width:${(b-a).toFixed(1)}%"></div><div class="pt" style="left:${a}%;background:var(--loss)"></div><div class="pt" style="left:${b}%;background:var(--win)"></div><span class="pl" style="left:${a}%;color:var(--loss);top:-6px">${fmt(r.sl,1)}</span><span class="pl" style="left:${b}%;color:var(--win);top:-6px">${fmt(r.sw,1)}</span></div></div>`;
+}).join('') + '<div class="drow"><span></span><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)"><span>5</span><span>7.5</span><span>10</span></div></div>';
+
+$('mvptable').innerHTML = '<thead><tr><th>ตำแหน่ง</th><th>ชนะ</th><th>แพ้</th><th>รวม</th></tr></thead><tbody>' +
+  R.map(r=>`<tr><td><i class="dotr" style="background:${r.c}"></i>${r.k}</td><td>${r.mvpW}</td><td>${r.mvpL}</td><td class="num ${r.mvp===Math.max(...R.map(x=>x.mvp))?'best':''}">${r.mvp}</td></tr>`).join('') + `</tbody>`;
+
+const cols = [['score','คะแนนเฉลี่ย',v=>fmt(v,2)],['sw','คะแนนตอนชนะ',v=>fmt(v,2)],['sl','คะแนนตอนแพ้',v=>fmt(v,2)],['dmg','ดาเมจ',int],['taken','รับดาเมจ',int],['part','ส่วนร่วม',v=>fmt(v)],['mvp','MVP',v=>v]];
+$('roletable').innerHTML = '<thead><tr><th>ตำแหน่ง</th>' + cols.map(c=>`<th>${c[1]}</th>`).join('') + '</tr></thead><tbody>' +
+  R.map(r=>`<tr><td><i class="dotr" style="background:${r.c}"></i>${r.k}</td>` + cols.map(c=>{
+    const mx = Math.max(...R.map(x=>x[c[0]]));
+    return `<td class="num ${r[c[0]]===mx?'best':''}">${c[2](r[c[0]])}</td>`; }).join('') + '</tr>').join('') + '</tbody>';
+
+// Heroes
+let hr = 3;
+function drawHeroes(){
+  $('heroseg').innerHTML = ROLES.map((r,i)=>`<button data-i="${i}" aria-pressed="${i===hr}">${r.k}</button>`).join('');
+  const m = {};
+  G.forEach(g=>{ const h=g.heroes[hr], s=g.stats[hr]; const o = m[h] || (m[h]={h,n:0,w:0,sc:[],mvp:0}); o.n++; o.w+=g.win; if(s.score!=null) o.sc.push(s.score); o.mvp+=s.mvp; });
+  const rows = Object.values(m).sort((a,b)=>b.n-a.n||b.w-a.w);
+  $('herotable').innerHTML = '<thead><tr><th>ตัวละคร</th><th>ใช้ (เกม)</th><th>ชนะ</th><th>แพ้</th><th>วินเรต</th><th>คะแนนเฉลี่ย</th><th>MVP</th></tr></thead><tbody>' +
+    rows.map(o=>`<tr class="${o.n<3?'dim':''}"><td>${o.h}</td><td class="num">${o.n}</td><td>${o.w}</td><td>${o.n-o.w}</td><td class="num">${pct(o.w,o.n)}</td><td class="num">${fmt(avg(o.sc),2)}</td><td>${o.mvp||'–'}</td></tr>`).join('') + '</tbody>';
+  document.querySelectorAll('#heroseg button').forEach(b=>b.onclick=()=>{hr=+b.dataset.i;drawHeroes();});
+}
+drawHeroes();
+
+// Pick order heat
+(function(){
+  const gs = G.filter(g=>g.picks[0]);
+  let mx = 1; const grid = ROLES.map((r,i)=>[1,2,3,4,5].map(s=>{ const m=gs.filter(g=>g.picks[i]===s); mx=Math.max(mx,m.length); return {n:m.length,w:m.filter(g=>g.win).length}; }));
+  $('heat').innerHTML = '<thead><tr><th>ตำแหน่ง</th>' + [1,2,3,4,5].map(s=>`<th>ลำดับ ${s}</th>`).join('') + '</tr></thead><tbody>' +
+    ROLES.map((r,i)=>`<tr><td><i class="dotr" style="background:${r.c}"></i>${r.k}</td>` + grid[i].map(c=>{
+      const a = c.n ? (0.12 + 0.55*c.n/mx) : 0;
+      return `<td class="c" style="background:color-mix(in srgb, ${r.c} ${Math.round(a*100)}%, transparent)">${c.n?`<b>${c.n}</b><span>ชนะ ${pct(c.w,c.n)}</span>`:'<span>–</span>'}</td>`; }).join('') + '</tr>').join('') + '</tbody>';
+})();
+
+// Match log
+let lf = 'all';
+function drawLog(){
+  const opts = [['all','ทั้งหมด'],['w','ชนะ'],['l','แพ้']];
+  $('logseg').innerHTML = opts.map(o=>`<button data-f="${o[0]}" aria-pressed="${o[0]===lf}">${o[1]}</button>`).join('');
+  const rows = G.map((g,i)=>({g,i})).filter(({g})=>lf==='all'||(lf==='w')===g.win);
+  $('log').innerHTML = '<thead><tr><th>#</th><th>วันที่</th><th>เกม</th><th style="text-align:left">ทีมที่เจอ</th><th>ผล</th>' + ROLES.map(r=>`<th>${r.k}</th>`).join('') + '</tr></thead><tbody>' +
+    rows.map(({g,i})=>`<tr><td class="dim">${i+1}</td><td>${dshort(g.date)}</td><td>${g.game}</td><td style="text-align:left">${g.opp}</td><td><span class="tag ${g.win?'w':'l'}">${g.win?'ชนะ':'แพ้'}</span></td>` +
+      g.heroes.map((h,k)=>`<td>${h}${g.stats[k].mvp?' <span class="chip mvp">MVP</span>':''}</td>`).join('') + '</tr>').join('') + '</tbody>';
+  document.querySelectorAll('#logseg button').forEach(b=>b.onclick=()=>{lf=b.dataset.f;drawLog();});
+}
+drawLog();
+}
+
+render(SNAP);
+
+// ---- ดึงข้อมูลล่าสุดจาก Google Sheets (CSV ที่เผยแพร่) ----
+// วางลิงก์ CSV ที่ได้จาก Google Sheets: ไฟล์ > แชร์ > เผยแพร่ไปยังเว็บ > เลือกชีต "สถิติ" และรูปแบบ CSV
+// ปล่อยว่างไว้ ระบบจะแสดงข้อมูลสแนปช็อตที่ฝังมาในไฟล์นี้
+const CSV_URL = '';
+
+function parseCSV(text){
+  const rows=[]; let row=[], f='', q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){ row.push(f); f=''; }
+    else if(c==='\n'){ row.push(f); rows.push(row); row=[]; f=''; }
+    else if(c!=='\r') f+=c;
+  }
+  if(f.length||row.length){ row.push(f); rows.push(row); }
+  return rows;
+}
+function decodeB64(b64){
+  const bin=atob(b64.replace(/\s/g,'')); const u=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(u);
+}
+function toGames(rows){
+  const num = s => { s=(s||'').trim().replace(/,/g,''); return /^-?\d+(\.\d+)?$/.test(s) ? parseFloat(s) : null; };
+  const out=[]; let date='', opp='';
+  rows.forEach((r,idx)=>{
+    if(idx<2) return;
+    if((r[0]||'').trim()) date=r[0].trim();
+    if((r[1]||'').trim()) opp=r[1].trim();
+    const res=(r[15]||'').trim();
+    if(res!=='ชนะ' && res!=='แพ้') return;
+    const stats=[0,1,2,3,4].map(i=>{
+      const b=17+i*4, sc=(r[b+3]||'').trim(), m=sc.match(/^[\d.]+/);
+      return {dmg:num(r[b]),taken:num(r[b+1]),part:num(r[b+2]),score:m?parseFloat(m[0]):null,mvp:/MVP/.test(sc)};
+    });
+    out.push({date,opp,game:parseInt(r[2],10)||out.length+1,win:res==='ชนะ',
+      picks:[3,4,5,6,7].map(i=>{const v=parseInt(r[i],10);return isNaN(v)?null:v;}),
+      heroes:[8,9,10,11,12].map(i=>(r[i]||'').replace(/\([^)]*\)\s*$/,'').trim()),
+      stats});
+  });
+  return out;
+}
+
+const liveBtn = $('refresh'), liveMsg = $('live');
+function setMsg(t, bad){ liveMsg.textContent = t; liveMsg.style.color = bad ? 'var(--loss)' : 'var(--muted)'; }
+async function loadSheet(){
+  liveBtn.disabled = true; setMsg('กำลังอ่านชีต...');
+  try {
+    const res = await fetch(CSV_URL, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const games = toGames(parseCSV(await res.text()));
+    if(!games.length) throw new Error('ไม่พบเกมที่มีผลแพ้ชนะในชีต');
+    render(games);
+    setMsg('อัปเดตจากชีตเมื่อ ' + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) + ' · ' + games.length + ' เกม');
+  } catch(e) {
+    setMsg('ดึงข้อมูลไม่สำเร็จ แสดงข้อมูลสแนปช็อตแทน (' + (e && e.message ? e.message : 'ไม่ทราบสาเหตุ') + ')', true);
+  } finally { liveBtn.disabled = false; }
+}
+if(CSV_URL){ liveBtn.hidden = false; liveBtn.onclick = loadSheet; loadSheet(); }
+else { liveBtn.hidden = true; setMsg('แสดงข้อมูลสแนปช็อตวันที่ 9 ต.ค. 2026 (ยังไม่ได้ใส่ CSV_URL)'); }
+</script>
+</body>
+</html>
